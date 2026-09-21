@@ -1,0 +1,149 @@
+package request
+
+// package request
+
+import (
+	// "errors"
+	"bytes"
+	"fmt"
+	"io"
+
+	"github.com/NinnjA254/httpfromtcp/internal/headers"
+)
+
+type parseState string
+
+const (
+	INIT    parseState = "init"
+	HEADERS parseState = "headers"
+	DONE    parseState = "done"
+)
+
+type Request struct {
+	RequestLine RequestLine
+	Headers     headers.Headers
+	body        []byte
+	state       parseState
+}
+
+func (r *Request) parse(data []byte) (int, error) {
+	bytesParsed := 0
+
+	for {
+		currentlyParsing := data[bytesParsed:]
+		// fmt.Printf("Parsing %q\n", currentlyParsing)
+		switch r.state {
+		case INIT:
+			requestLine, n, err := parseRequestLine(currentlyParsing)
+
+			if err != nil {
+				return 0, err
+			}
+			if n == 0 {
+				return bytesParsed, nil
+			}
+			r.RequestLine = *requestLine
+			bytesParsed += n
+			r.state = HEADERS
+		case HEADERS:
+			n, done, err := r.Headers.Parse(currentlyParsing)
+			if err != nil {
+				return 0, err
+			}
+			if n == 0 {
+				return bytesParsed, nil
+			}
+			bytesParsed += n
+			if done {
+				r.state = DONE
+				return bytesParsed, nil
+			}
+		}
+	}
+}
+
+type RequestLine struct {
+	Method        string
+	RequestTarget string
+	HttpVersion   string
+}
+
+var ErrMalformedRequestLine = fmt.Errorf("malformed request line")
+
+func parseRequestLine(data []byte) (*RequestLine, int, error) {
+	idx := bytes.Index(data, []byte("\r\n"))
+	if idx == -1 {
+		return nil, 0, nil
+	}
+
+	requestLine := data[:idx]
+	fmt.Printf("parsing requestLine-> %q-> len %d\n", requestLine, idx)
+	parts := bytes.Split(requestLine, []byte(" "))
+	if len(parts) != 3 {
+		return nil, idx + 2, ErrMalformedRequestLine
+	}
+	method := string(parts[0])
+	//method should have only capital alphabetic characters
+	for _, char := range method {
+		if char < 'A' || char > 'Z' {
+			return nil, idx + 2, ErrMalformedRequestLine
+		}
+	}
+	requestTarget := string(parts[1])
+	//requestTarget
+	httpVersion := string(parts[2])
+	if len(httpVersion) != 8 ||
+		httpVersion[:5] != "HTTP/" || //test
+		httpVersion[5] < '0' || httpVersion[5] > '9' ||
+		httpVersion[6] != '.' ||
+		httpVersion[7] < '0' || httpVersion[7] > '9' {
+		return nil, idx + 2, ErrMalformedRequestLine
+	}
+
+	return &RequestLine{
+		Method:        method,
+		RequestTarget: requestTarget,
+		HttpVersion:   httpVersion[5:],
+	}, idx + 2, nil
+}
+
+func RequestFromReader(reader io.Reader) (*Request, error) {
+	dataLen := 0
+	dataStart := 0
+	buf := make([]byte, 1024)
+	r := &Request{state: INIT, Headers: headers.NewHeaders()}
+
+	for r.state != DONE {
+		if dataLen == cap(buf) {
+			buf = append(buf, 0)
+			buf = buf[:cap(buf)]
+			// fmt.Println("grow buf, cap now: ", cap(buf))
+			// fmt.Println("===================")
+		}
+		fmt.Println()
+		fmt.Println("Getting data from the connection...")
+		n, err := reader.Read(buf[dataLen:])
+		if err != nil {
+			fmt.Println()
+			return nil, err
+		}
+		dataLen += n
+
+		data := buf[dataStart:dataLen]
+		// fmt.Printf("data:-> %q\n", data)
+		fmt.Printf("==================data================\n")
+		fmt.Printf("%q\n", data)
+		// fmt.Printf("%s\n", data)
+		fmt.Printf("======================================\n")
+		bytesParsed, err := r.parse(data)
+		if err != nil {
+			return nil, err
+		}
+		dataStart += bytesParsed
+		// printRequest(r)
+	}
+
+	// printRequest(r)
+	// fmt.Println()
+	return r, nil
+}
