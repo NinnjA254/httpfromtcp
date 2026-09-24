@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	// go ServeEcho(42068)
+	go ServeEcho(42068)
 	// return
 
 	listener, err := net.Listen("tcp", ":42069")
@@ -31,6 +31,9 @@ func main() {
 			fmt.Println()
 			fmt.Println()
 			fmt.Println("Error parsing request->", err)
+
+			conn.Write([]byte("HTTP/1.1 400 Bad request\r\n"))
+			conn.Close()
 		} else {
 			fmt.Println()
 			fmt.Println()
@@ -45,10 +48,11 @@ func main() {
 			for k, v := range r.Headers {
 				fmt.Printf("- %s:%s\n", k, v)
 			}
-			// fmt.Println("len of headers", len(r.Headers))
+			fmt.Println("Body:")
+			fmt.Printf("%q\n", r.Body)
 
 			conn.Write([]byte("HTTP/1.1 200 OK\r\n" +
-				"Content-Type: application/json\r\n" +
+				"Content-Type : application/json\r\n" +
 				"Content-Length: 42\r\n\r\n" +
 				"{\"message\":\"hello, world!\",\"status\":\"ok\"}\n"))
 			conn.Close()

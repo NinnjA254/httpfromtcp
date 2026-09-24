@@ -5,8 +5,10 @@ package request
 import (
 	// "errors"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
+	"strconv"
 
 	"github.com/NinnjA254/httpfromtcp/internal/headers"
 )
@@ -16,13 +18,14 @@ type parseState string
 const (
 	INIT    parseState = "init"
 	HEADERS parseState = "headers"
+	BODY    parseState = "body"
 	DONE    parseState = "done"
 )
 
 type Request struct {
 	RequestLine RequestLine
 	Headers     headers.Headers
-	body        []byte
+	Body        []byte
 	state       parseState
 }
 
@@ -55,9 +58,28 @@ func (r *Request) parse(data []byte) (int, error) {
 			}
 			bytesParsed += n
 			if done {
-				r.state = DONE
+				r.state = BODY
+				// return bytesParsed, nil
+			}
+		case BODY:
+			contentLength := 0
+			contentLengthString, ok := r.Headers.Get("content-length")
+			if ok {
+				n, err := strconv.Atoi(contentLengthString)
+				if err != nil || n < 0 {
+					return 0, errors.New("malformed content length")
+				}
+				contentLength = n
+			}
+			fmt.Printf("parsing body-> %q-> len %d\n", currentlyParsing, len(currentlyParsing))
+			fmt.Println(" | - Content-Length:", contentLength)
+			if len(currentlyParsing) < contentLength {
 				return bytesParsed, nil
 			}
+			r.Body = make([]byte, contentLength)
+			copy(r.Body, currentlyParsing[:contentLength])
+			r.state = DONE
+			return bytesParsed, nil
 		}
 	}
 }
@@ -140,10 +162,10 @@ func RequestFromReader(reader io.Reader) (*Request, error) {
 			return nil, err
 		}
 		dataStart += bytesParsed
-		// printRequest(r)
+		// PrintRequest(r)
 	}
 
-	// printRequest(r)
+	// PrintRequest(r)
 	// fmt.Println()
 	return r, nil
 }

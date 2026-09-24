@@ -8,6 +8,24 @@ import (
 
 type Headers map[string]string
 
+// Get the value of a header, case insensitive
+// Returns:
+// the value of the header and true if it exists,
+// "" and false if it doesn't exist
+func (h Headers) Get(key string) (string, bool) {
+	key = strings.ToLower(key)
+	val, ok := h[key]
+	return val, ok
+}
+func (h Headers) Set(key string, val string) {
+	key = strings.ToLower(key)
+	if _, ok := h.Get(key); ok {
+		h[key] += "," + val
+	} else {
+		h[key] = val
+	}
+}
+
 func NewHeaders() Headers {
 	return make(Headers)
 }
@@ -40,14 +58,7 @@ func (h Headers) Parse(data []byte) (n int, done bool, err error) {
 	if !isValidFieldValue(val) {
 		return 0, false, ErrMalformedHeaderValue
 	}
-
-	key = strings.ToLower(key)
-	if _, exists := h[key]; exists {
-		h[key] += "," + val
-		//
-	} else {
-		h[key] = strings.Trim(val, " ")
-	}
+	h.Set(key, val)
 
 	return idx + 2, false, nil
 }

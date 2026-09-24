@@ -139,3 +139,121 @@ func TestRequestFromReader(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, r)
 }
+func TestBodyParsing(t *testing.T) {
+	numBytesPerRead := 3
+	// content-length < actual content's length
+	reader := chunkReader{
+		data: "POST / HTTP/1.1\r\n" +
+			"Host: localhost:42069\r\n" +
+			"User-Agent: curl/7.81.0\r\n" +
+			"content-length: 2\r\n\r\n" +
+			"123456789",
+		numBytesPerRead: numBytesPerRead,
+		pos:             0,
+	}
+	r, err := RequestFromReader(&reader)
+	require.NoError(t, err)
+	require.NotNil(t, r)
+	require.Equal(t, "12", string(r.Body))
+
+	// content-length == actual content's length
+	reader = chunkReader{
+		data: "POST / HTTP/1.1\r\n" +
+			"Host: localhost:42069\r\n" +
+			"User-Agent: curl/7.81.0\r\n" +
+			"content-length: 9\r\n\r\n" +
+			"123456789",
+		numBytesPerRead: numBytesPerRead,
+		pos:             0,
+	}
+	r, err = RequestFromReader(&reader)
+	require.NoError(t, err)
+	require.NotNil(t, r)
+	require.Equal(t, "123456789", string(r.Body))
+
+	// content-length > actual content's length
+	reader = chunkReader{
+		data: "POST / HTTP/1.1\r\n" +
+			"Host: localhost:42069\r\n" +
+			"User-Agent: curl/7.81.0\r\n" +
+			"content-length: 10\r\n\r\n" +
+			"123456789",
+		numBytesPerRead: numBytesPerRead,
+		pos:             0,
+	}
+	r, err = RequestFromReader(&reader)
+	require.Error(t, err)
+	require.Equal(t, io.EOF, err)
+	require.Nil(t, r)
+
+	// content-length == 0
+	reader = chunkReader{
+		data: "POST / HTTP/1.1\r\n" +
+			"Host: localhost:42069\r\n" +
+			"User-Agent: curl/7.81.0\r\n" +
+			"content-length: 0\r\n\r\n" +
+			"123456789",
+		numBytesPerRead: numBytesPerRead,
+		pos:             0,
+	}
+	r, err = RequestFromReader(&reader)
+	require.NoError(t, err)
+	require.NotNil(t, r)
+	require.Equal(t, "", string(r.Body))
+
+	// no content-length header
+	reader = chunkReader{
+		data: "POST / HTTP/1.1\r\n" +
+			"Host: localhost:42069\r\n" +
+			"User-Agent: curl/7.81.0\r\n\r\n" +
+			"123456789",
+		numBytesPerRead: numBytesPerRead,
+		pos:             0,
+	}
+	r, err = RequestFromReader(&reader)
+	require.NoError(t, err)
+	require.NotNil(t, r)
+	require.Equal(t, "", string(r.Body))
+
+	// content-length < 0
+	reader = chunkReader{
+		data: "POST / HTTP/1.1\r\n" +
+			"Host: localhost:42069\r\n" +
+			"User-Agent: curl/7.81.0\r\n" +
+			"content-length: -1\r\n\r\n" +
+			"123456789",
+		numBytesPerRead: numBytesPerRead,
+		pos:             0,
+	}
+	r, err = RequestFromReader(&reader)
+	require.Error(t, err)
+	require.Nil(t, r)
+
+	// decimal content-length
+	reader = chunkReader{
+		data: "POST / HTTP/1.1\r\n" +
+			"Host: localhost:42069\r\n" +
+			"User-Agent: curl/7.81.0\r\n" +
+			"content-length: 1.2\r\n\r\n" +
+			"123456789",
+		numBytesPerRead: numBytesPerRead,
+		pos:             0,
+	}
+	r, err = RequestFromReader(&reader)
+	require.Error(t, err)
+	require.Nil(t, r)
+
+	// non-digit content-length
+	reader = chunkReader{
+		data: "POST / HTTP/1.1\r\n" +
+			"Host: localhost:42069\r\n" +
+			"User-Agent: curl/7.81.0\r\n" +
+			"content-length: foo1\r\n\r\n" +
+			"123456789",
+		numBytesPerRead: numBytesPerRead,
+		pos:             0,
+	}
+	r, err = RequestFromReader(&reader)
+	require.Error(t, err)
+	require.Nil(t, r)
+}
