@@ -9,8 +9,7 @@ import (
 )
 
 func main() {
-	go ServeEcho(42068)
-	// return
+	// go ServeEcho(42068)
 
 	listener, err := net.Listen("tcp", ":42069")
 	if err != nil {
@@ -46,7 +45,7 @@ func main() {
 			// fmt.Printf("Headers:\n- %v\n", r.Headers)
 			fmt.Printf("Headers: (%d)\n", len(r.Headers))
 			for k, v := range r.Headers {
-				fmt.Printf("- %s:%s\n", k, v)
+				fmt.Printf("- %s: %s\n", k, v)
 			}
 			fmt.Println("Body:")
 			fmt.Printf("%q\n", r.Body)

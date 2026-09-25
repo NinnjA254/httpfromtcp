@@ -9,6 +9,9 @@ import (
 func echo(w http.ResponseWriter, r *http.Request) {
 	fmt.Println()
 	fmt.Printf("New %v request from: %v\n", r.Method, r.RemoteAddr)
+	fmt.Printf("Proto -> %v\n", r.Proto)
+	fmt.Printf("Method -> %v\n", r.Method)
+	fmt.Printf("URL -> %v\n", r.URL)
 	fmt.Printf("Headers (%v)\n", len(r.Header))
 	for k, v := range r.Header {
 		fmt.Printf("- %q: %q\n", k, v)

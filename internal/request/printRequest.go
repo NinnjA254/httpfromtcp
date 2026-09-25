@@ -10,7 +10,7 @@ func PrintRequest(r *Request) {
 	)
 	fmt.Println("Headers:")
 	for k, v := range r.Headers {
-		fmt.Printf("- %s:%s\n", k, v)
+		fmt.Printf("- %s: %s\n", k, v)
 	}
 	fmt.Println("Body:")
 	fmt.Printf("%q\n", r.Body)

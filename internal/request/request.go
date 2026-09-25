@@ -59,7 +59,6 @@ func (r *Request) parse(data []byte) (int, error) {
 			bytesParsed += n
 			if done {
 				r.state = BODY
-				// return bytesParsed, nil
 			}
 		case BODY:
 			contentLength := 0
