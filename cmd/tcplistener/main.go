@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net"
@@ -9,6 +10,7 @@ import (
 )
 
 func main() {
+	flag.Parse()
 	// go ServeEcho(42068)
 
 	listener, err := net.Listen("tcp", ":42069")

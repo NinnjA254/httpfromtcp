@@ -10,6 +10,7 @@ import (
 	"io"
 	"strconv"
 
+	"github.com/NinnjA254/httpfromtcp/cli"
 	"github.com/NinnjA254/httpfromtcp/internal/headers"
 )
 
@@ -70,8 +71,8 @@ func (r *Request) parse(data []byte) (int, error) {
 				}
 				contentLength = n
 			}
-			fmt.Printf("parsing body-> %q-> len %d\n", currentlyParsing, len(currentlyParsing))
-			fmt.Println(" | - Content-Length:", contentLength)
+			cli.Printf("parsing body-> %q-> len %d\n", currentlyParsing, len(currentlyParsing))
+			cli.Printf(" | - Content-Length: %v\n", contentLength)
 			if len(currentlyParsing) < contentLength {
 				return bytesParsed, nil
 			}
@@ -98,7 +99,7 @@ func parseRequestLine(data []byte) (*RequestLine, int, error) {
 	}
 
 	requestLine := data[:idx]
-	fmt.Printf("parsing requestLine-> %q-> len %d\n", requestLine, idx)
+	cli.Printf("parsing requestLine-> %q-> len %d\n", requestLine, idx)
 	parts := bytes.Split(requestLine, []byte(" "))
 	if len(parts) != 3 {
 		return nil, idx + 2, ErrMalformedRequestLine
@@ -141,21 +142,17 @@ func RequestFromReader(reader io.Reader) (*Request, error) {
 			// fmt.Println("grow buf, cap now: ", cap(buf))
 			// fmt.Println("===================")
 		}
-		fmt.Println()
-		fmt.Println("Getting data from the connection...")
+		cli.Printf("\n" + "Getting data from the connection...\n")
 		n, err := reader.Read(buf[dataLen:])
 		if err != nil {
-			fmt.Println()
 			return nil, err
 		}
 		dataLen += n
 
 		data := buf[dataStart:dataLen]
-		// fmt.Printf("data:-> %q\n", data)
-		fmt.Printf("==================data================\n")
-		fmt.Printf("%q\n", data)
-		// fmt.Printf("%s\n", data)
-		fmt.Printf("======================================\n")
+		cli.Printf("==================data================\n")
+		cli.Printf("%q\n", data)
+		cli.Printf("======================================\n")
 		bytesParsed, err := r.parse(data)
 		if err != nil {
 			return nil, err

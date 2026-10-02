@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
+
+	"github.com/NinnjA254/httpfromtcp/cli"
 )
 
 type Headers map[string]string
@@ -39,7 +41,7 @@ func (h Headers) Parse(data []byte) (n int, done bool, err error) {
 	if idx == -1 {
 		return 0, false, nil
 	}
-	fmt.Printf("parsing header-> %q-> len %d\n", string(data[:idx]), idx)
+	cli.Printf("parsing header-> %q-> len %d\n", string(data[:idx]), idx)
 	if idx == 0 {
 		return 2, true, nil
 	}
@@ -52,7 +54,6 @@ func (h Headers) Parse(data []byte) (n int, done bool, err error) {
 	key := string(parts[0])
 	val := strings.Trim(string(parts[1]), " \t")
 	if !isValidFieldName(key) {
-		fmt.Println("invalid field name")
 		return 0, false, ErrMalformedHeaderName
 	}
 	if !isValidFieldValue(val) {
