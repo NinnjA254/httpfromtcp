@@ -10,27 +10,18 @@ import (
 	"github.com/NinnjA254/httpfromtcp/internal/request"
 )
 
-type routeHandler func(req *request.Request, res *Response)
+type requestHandler func(req *request.Request, res *Response)
 type Server struct {
-	routeHandlers   map[string]routeHandler
-	notfoundHandler routeHandler
+	handler requestHandler
 }
 
-func InitServer() Server {
+func InitServer(h requestHandler) Server {
 	flag.Parse()
 	return Server{
-		routeHandlers:   map[string]routeHandler{},
-		notfoundHandler: defaultnotfoundHandler,
+		handler: h,
 	}
 }
-func (s *Server) Route(path string, handler routeHandler) {
-	//add a check to warn if a route is overwritten
-	s.routeHandlers[path] = handler
-}
-func defaultnotfoundHandler(req *request.Request, res *Response) {
-	fmt.Println("404 not found:", req.RequestLine.RequestTarget)
-	res.SendText("not found, please stand by, proper 404 messages under construction")
-}
+
 func (s *Server) Listen(port int) (err error) {
 
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
@@ -39,10 +30,6 @@ func (s *Server) Listen(port int) (err error) {
 	}
 	defer listener.Close()
 	fmt.Printf("Server up! Listening on port %d\n", port)
-	fmt.Printf("Currently registered routes:\n")
-	for k := range s.routeHandlers {
-		fmt.Printf("    %v\n", k)
-	}
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
@@ -60,13 +47,8 @@ func handleRequest(s *Server, conn net.Conn) {
 		//send error http response
 		return
 	}
-	requestTarget := req.RequestLine.RequestTarget
-	handler, ok := s.routeHandlers[requestTarget]
-	if !ok {
-		handler = s.notfoundHandler
-	}
 	res := &Response{conn: conn}
-	handler(req, res)
+	s.handler(req, res)
 }
 
 type Response struct {
@@ -88,7 +70,7 @@ func (res *Response) SendText(content string) {
 }
 func (res *Response) SendHTML(content string) {
 	contentLength := len(content)
-	contentType := "text/html"
+	contentType := "text/html; charset=UTF-8"
 	serverName := "Mninjnx"
 	httpResponse := []byte("HTTP/1.1 200 OK\r\n" +
 		fmt.Sprintf("Content-Type: %s\r\n", contentType) +

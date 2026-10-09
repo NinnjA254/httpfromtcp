@@ -50,44 +50,47 @@ func getApartments(f filter) []Apartment {
 	}
 }
 func main() {
-	s := server.InitServer()
-	s.Route("/finishedunits", func(req *request.Request, res *server.Response) {
-		fmt.Println("/finished")
-		finishedUnits := getApartments(FINISHED)
-		res.SendJSON(finishedUnits)
-	})
-	s.Route("/allunits", func(req *request.Request, res *server.Response) {
-		fmt.Println("/allunits")
-		allUnits := getApartments(ALL)
-		res.SendJSON(allUnits)
-	})
-	s.Route("/", func(req *request.Request, res *server.Response) {
-		fmt.Println("/")
-		res.SendHTML(
-			"<h1>Tsavo apartments</h1>" +
-				"<p>site under construction</p>")
-	})
-	s.Route("/favicon.ico", func(req *request.Request, res *server.Response) {
-		fmt.Println("/favicon.ico")
-		f, err := os.Open("./cmd/blog/img.jpg")
-		if err != nil {
-			res.SendText("image sending error")
-			return
+	s := server.InitServer(func(req *request.Request, res *server.Response) {
+		path := req.RequestLine.RequestTarget
+		switch path {
+		case "/":
+			fmt.Println("/")
+			res.SendHTML(
+				"<h1>Tsavo apartments</h1>" +
+					"<p>site under construction</p>")
+		case "/finishedunits":
+			fmt.Println("/finished")
+			finishedUnits := getApartments(FINISHED)
+			res.SendJSON(finishedUnits)
+		case "/allunits":
+			fmt.Println("/allunits")
+			allUnits := getApartments(ALL)
+			res.SendJSON(allUnits)
+		case "/favicon.ico":
+			fmt.Println("/favicon.ico")
+			f, err := os.Open("./cmd/blog/img.jpg")
+			if err != nil {
+				res.SendText("image sending error")
+				return
+			}
+			defer f.Close()
+			fileInfo, err := f.Stat()
+			if err != nil {
+				res.SendText("image sending error")
+				return
+			}
+			imgSize := fileInfo.Size()
+			imgData := make([]byte, imgSize)
+			n, err := f.Read(imgData)
+			if err != nil {
+				res.SendText("image sending error")
+				return
+			}
+			res.SendImage(imgData[:n])
+		default:
+			fmt.Println("not found:", req.RequestLine.RequestTarget)
+			res.SendHTML("<h1>404 not found</h1>")
 		}
-		defer f.Close()
-		fileInfo, err := f.Stat()
-		if err != nil {
-			res.SendText("image sending error")
-			return
-		}
-		imgSize := fileInfo.Size()
-		imgData := make([]byte, imgSize)
-		n, err := f.Read(imgData)
-		if err != nil {
-			res.SendText("image sending error")
-			return
-		}
-		res.SendImage(imgData[:n])
 	})
 
 	s.Listen(42069)
