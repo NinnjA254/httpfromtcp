@@ -1,0 +1,252 @@
+@font-face {
+    font-family: "Graphik";
+    src: url("./assets/fonts/Graphik-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Graphik";
+    src: url("./assets/fonts/Graphik-Medium-Web.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Graphik";
+    src: url("./assets/fonts/Graphik-Semibold.woff2") format("woff2");
+    font-weight: 600;
+    font-style: normal;
+}
+@font-face {
+    font-family: "Material Icons Outlined";
+    src: url("./assets/fonts/MaterialIcons-Outlined.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+}
+@font-face {
+    font-family: "Framework Pixel";
+    src: url("./assets/fonts/framework-pixel.otf") format("opentype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+* {
+	box-sizing: border-box;
+	margin:0;
+	padding: 0;
+}
+.pixel {
+	font-family: "Framework Pixel", sans-serif;
+}
+.icon {
+	font-family: "Material Icons Outlined", sans-serif;
+	font-size: 24px;
+}
+html {
+	--color-white: #fff;
+	--color-black: #1f1f1f;
+	--color-primary: #e76235;
+
+	font-size: 16px;
+	font-family: "Graphik", sans-serif;
+}
+a {
+	text-decoration: none;
+}
+body {
+	font-weight: 400;
+	background-color: var(--color-white);
+	color: var(--color-black);
+}
+.rounded-button-primary {
+	border-radius: 20px;
+	padding: 8px 16px;
+	font-weight:600;
+	/*color: var(--color-black);*/
+	color: #000000;
+
+	background-color: var(--color-primary);
+}
+.rounded-button-secondary{
+	border-radius: 20px;
+	padding: 8px 16px;
+	font-weight:600;
+	/*color: var(--color-black);*/
+	color: #2a2422;
+	border: 1px solid var(--color-black)
+}
+header {
+	background-color: #fafaf9;
+	color:var(--color-black);
+	height: 48px;
+	display: flex;
+	align-items:center;
+	justify-content: space-between;
+	padding: 0 40px;
+	position:fixed;
+	width: 100%;
+	z-index: 200;
+}
+
+header button {
+	all:unset;
+	cursor: pointer;
+}
+header .logo {
+	filter:invert();
+}
+header .right-icons {
+	display:flex;
+	align-items:center;
+	gap:16px;
+}
+header .right-icons a {
+	color: var(--color-black);
+	transition:all 0.1s ease;
+}
+header .right-icons a:hover {
+	color: var(--color-primary);
+}
+
+.laptop-hero {
+	padding:80px;
+	background-image: url("./assets/fw13pro-hero.jpg");
+	color: var(--color-white);
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	height: 680px;
+	display:flex;
+	align-items:center;
+}
+.laptop-hero .content {
+	width: 600px;
+}
+.laptop-hero h1 {
+	font-size: 60px;
+	margin-bottom: 16px;
+	line-height: 1.25;
+}
+.laptop-hero h1 strong{
+	color: var(--color-primary);
+}
+.laptop-hero p {
+	width: 530px;
+}
+.laptop-hero p a{
+	color:var(--color-white);
+	text-decoration: underline;
+	transition:all 0.9s ease;
+}
+.laptop-hero p a:hover{
+	text-underline-offset:2px;
+}
+.call-to-action {
+	display:flex;
+	gap:8px;
+	margin-top: 32px;
+}
+.laptop-hero .rounded-button-secondary{
+	background-color: var(--color-black);
+	border: 1px solid var(--color-white);
+	color: var(--color-white);
+}
+
+.announcement {
+	background-color: var(--color-white);
+	display: flex;
+	align-items:center;
+	justify-content:center;
+	flex-direction: column;
+	gap:32px;
+	padding: 16px 0 56px;
+}
+.announcement .marquee{
+	display: flex;
+	overflow: hidden;
+	width: 100%;
+}
+.announcement .marquee img {
+	padding: 0 28px;
+	height: 40px;
+	animation: 20s linear infinite marquee;
+}
+.announcement .marquee:hover img {
+	animation-play-state:paused;
+}
+
+@keyframes marquee{
+	0%{
+		transform:translate(0)
+	}
+	to{
+		transform:translate(calc(-100%))
+	}
+}
+@keyframes move-strip {
+    0% {
+	padding: 0 0;
+        transform: translateX(0);
+    }
+
+    50% {
+	padding: 0 200px;
+        transform: translateX(100px);
+    }
+
+    100% {
+	padding: 0 0px;
+        transform: translateX(0);
+    }
+}
+
+.cards {
+	display: flex;
+	flex-direction: column;
+	gap:24px;
+	margin: 0 120px 180px;
+}
+.card {
+	position:relative;
+	padding:40px;
+	border-radius:12px;
+	display:flex;
+	align-items:center;
+	height:488px;
+	overflow:hidden;
+}
+.card-right {
+	justify-content: flex-end;
+}
+.card img, .card video{
+	position:absolute;
+	top:0;
+	right:0;
+	z-index: -1;
+	height:100%;
+}
+.card .bg {
+	position:absolute;
+	top:0;
+	left:0;
+	z-index: -2;
+	height:100%;
+	width:100%;
+	background-color: #BEA7F0;
+}
+.card .content{
+	width:373px;
+}
+.card h3 {
+	font-size:36px;
+	margin-bottom: 8px;
+	color: #101828;
+}
+.card .call-to-action{ 
+}
+
+.parts-reel video {
+	width: 100%;
+	margin: 0;
+}
