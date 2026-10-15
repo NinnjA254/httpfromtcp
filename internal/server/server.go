@@ -5,8 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/NinnjA254/httpfromtcp/cli"
+	"github.com/NinnjA254/httpfromtcp/internal/headers"
 	"github.com/NinnjA254/httpfromtcp/internal/request"
 )
 
@@ -33,7 +35,7 @@ func (s *Server) Listen(port int) (err error) {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			cli.Printf("Error accepting request, %v", err)
+			fmt.Printf("Error accepting request, %v", err)
 			continue
 		}
 		handleRequest(s, conn)
@@ -41,20 +43,47 @@ func (s *Server) Listen(port int) (err error) {
 }
 func handleRequest(s *Server, conn net.Conn) {
 	defer conn.Close()
-	fmt.Printf("\nNew request from->%v\n", conn.RemoteAddr().String())
+	cli.Printf("\nNew request from->%v\n", conn.RemoteAddr().String())
 	req, err := request.RequestFromReader(conn)
 	if err != nil {
 		//send error http response
 		return
 	}
-	res := &Response{conn: conn}
+	if req.RequestLine.HttpVersion != "1.1" {
+		//send error http response
+		return
+	}
+	res := &Response{
+		conn:        conn,
+		httpVersion: req.RequestLine.HttpVersion,
+		Headers: headers.Headers{
+			"date":   time.Now().UTC().Format("Mon, 02 Jan 2006 15:04:05 GMT"),
+			"server": "mninjnx",
+		},
+		Body: nil,
+	}
 	s.handler(req, res)
 }
 
 type Response struct {
-	conn net.Conn
+	conn         net.Conn
+	httpVersion  string
+	Status       int
+	ReasonPhrase string
+	Headers      headers.Headers
+	Body         []byte
 }
 
+func (res *Response) Send() {
+	responseLine := fmt.Sprintf("HTTP/%s %d %s\r\n", res.httpVersion, res.Status, res.ReasonPhrase)
+	headers := ""
+	for k, v := range res.Headers {
+		headers += fmt.Sprintf("%s: %s\r\n", k, v)
+	}
+	headers += "\r\n"
+	httpResponse := append([]byte(responseLine+headers), res.Body...)
+	res.conn.Write([]byte(httpResponse))
+}
 func (res *Response) SendText(content string) {
 	contentLength := len(content)
 	contentType := "text/plain"
