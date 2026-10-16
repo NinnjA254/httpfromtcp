@@ -19,13 +19,17 @@ func (h Headers) Get(key string) (string, bool) {
 	val, ok := h[key]
 	return val, ok
 }
-func (h Headers) Set(key string, val string) {
+func (h Headers) Add(key string, val string) {
 	key = strings.ToLower(key)
 	if _, ok := h.Get(key); ok {
 		h[key] += "," + val
 	} else {
 		h[key] = val
 	}
+}
+func (h Headers) Set(key string, val string) {
+	key = strings.ToLower(key)
+	h[key] = val
 }
 
 func NewHeaders() Headers {
@@ -59,7 +63,7 @@ func (h Headers) Parse(data []byte) (n int, done bool, err error) {
 	if !isValidFieldValue(val) {
 		return 0, false, ErrMalformedHeaderValue
 	}
-	h.Set(key, val)
+	h.Add(key, val)
 
 	return idx + 2, false, nil
 }
