@@ -1,8 +1,8 @@
 # friday
 (done)1. In directory listings, directories should have a "/" after their name
-(done)3. Proper logging for the file server.
-4. On windows paths don't work.
-5. Goroutines.
+(done)2. Proper logging for the file server.
+(done)3. On windows paths don't work.
+4. Goroutines.
 
 # file server
 

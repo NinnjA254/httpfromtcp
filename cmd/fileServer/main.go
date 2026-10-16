@@ -8,6 +8,7 @@ import (
 	"mime"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -28,8 +29,14 @@ func handler(req *request.Request, res *server.Response) {
 		fmt.Printf("[%s] %s %s - %d %s\n", time.Now().Format("Mon, 02 Jan 2006 15:04:05 "), req.RequestLine.Method, req.RequestLine.RequestTarget, res.Status, res.ReasonPhrase)
 		return
 	}
+
 	uri := req.RequestLine.RequestTarget
 	filePath := *directory + uri
+	//windows file paths use "\"
+	if runtime.GOOS == "windows" {
+		filePath = strings.ReplaceAll(filePath, "/", "\\")
+	}
+
 	fileInfo, err := os.Stat(filePath)
 	if errors.Is(err, os.ErrNotExist) == true || errors.Is(err, syscall.ENOTDIR) {
 		res.Status = 404
@@ -89,7 +96,7 @@ func handler(req *request.Request, res *server.Response) {
 		return
 	}
 
-	if !strings.HasSuffix(filePath, "/") {
+	if !strings.HasSuffix(uri, "/") {
 		res.Status = 301
 		res.ReasonPhrase = "Moved Permanently"
 		res.Headers.Add("location", uri+"/")
